@@ -27,22 +27,18 @@ client = tweepy.Client(
     wait_on_rate_limit=True
 )
 
-# Blocked keywords
 BLOCKED = {
-    "politics", "election", "government", "minister",
-    "bjp", "congress", "parliament", "president",
-    "religion", "god", "hindu", "islam", "christian",
-    "temple", "mosque", "church", "israel", "palestine"
+    "politics","election","government","minister",
+    "bjp","congress","parliament","president",
+    "religion","god","hindu","islam","christian",
+    "temple","mosque","church","israel","palestine"
 }
 
 def is_safe(text):
-    t = text.lower()
-    return not any(word in t for word in BLOCKED)
+    return not any(word in text.lower() for word in BLOCKED)
 
 def get_trending_topics(limit=5):
-    feed = feedparser.parse(
-        "https://news.google.com/rss?hl=en-IN&gl=IN&ceid=IN:en"
-    )
+    feed = feedparser.parse("https://news.google.com/rss?hl=en-IN&gl=IN&ceid=IN:en")
     topics = []
     for entry in feed.entries:
         title = entry.get("title", "")
@@ -57,20 +53,49 @@ TEMPLATES = [
     "A lot of people are discussing: {topic}",
     "Trending now: {topic}",
     "Seeing increased buzz around {topic}.",
-    "{topic} is worth keeping an eye on."
+    "{topic} is getting a lot of attention recently."
 ]
 
+def generate_tweet(topic):
+    return random.choice(TEMPLATES).format(topic=topic)[:270]
+
+def generate_thread(topic):
+    # Simple deterministic multi-tweet thread
+    return [
+        f"1/ {topic}",
+        "2/ Here’s a quick breakdown of why this is trending.",
+        "3/ It’s gaining attention due to recent developments and growing public interest.",
+        "4/ More updates expected soon. Stay tuned."
+    ]
+
 def main():
-    topics = get_trending_topics()
+    topics = get_trending_topics(10)
     if not topics:
         logging.info("No safe topics found.")
         return
 
-    for topic in topics:
-        tweet = random.choice(TEMPLATES).format(topic=topic)[:270]
-        client.create_tweet(text=tweet)
-        logging.info("Tweet posted.")
-        time.sleep(random.randint(15, 45))
+    # pick 5 topics
+    selected = topics[:5]
+
+    # find the topic with the longest text
+    long_topic = max(selected, key=len)
+
+    for topic in selected:
+        if topic == long_topic:
+            # Create and post the thread
+            thread_tweets = generate_thread(topic)
+            reply_to = None
+            for t in thread_tweets:
+                resp = client.create_tweet(text=t, reply_to_tweet_id=reply_to)
+                reply_to = resp["data"]["id"]
+                logging.info("Thread segment posted.")
+                time.sleep(random.randint(8, 15))
+        else:
+            # Normal tweet
+            tweet = generate_tweet(topic)
+            client.create_tweet(text=tweet)
+            logging.info("Single tweet posted.")
+            time.sleep(random.randint(10, 20))
 
 if __name__ == "__main__":
     main()
