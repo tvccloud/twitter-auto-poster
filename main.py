@@ -94,8 +94,22 @@ if reply_to is None:
 else:
     response = client.create_tweet(
         text=tweet,
-        in_reply_to_tweet_id=reply_to
-    )
+if topic == long_topic:
+    thread = generate_crypto_thread(topic)
+    reply_to = None
+
+    for tweet in thread:
+        if reply_to is None:
+            response = client.create_tweet(text=tweet)
+        else:
+            response = client.create_tweet(
+                text=tweet,
+                in_reply_to_tweet_id=reply_to
+            )
+
+        reply_to = response.data["id"]
+        logging.info("Thread part posted.")
+        time.sleep(random.randint(8, 15))    )
     reply_to = response["data"]["id"]
                 logging.info("Thread part posted.")
                 time.sleep(random.randint(8, 15))
