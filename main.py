@@ -81,8 +81,14 @@ def main():
             thread = generate_crypto_thread(topic)
             reply_to = None
             for tweet in thread:
-                response = client.create_tweet(text=tweet, reply_to_tweet_id=reply_to)
-                reply_to = response["data"]["id"]
+if reply_to is None:
+    response = client.create_tweet(text=tweet)
+else:
+    response = client.create_tweet(
+        text=tweet,
+        in_reply_to_tweet_id=reply_to
+    )
+    reply_to = response["data"]["id"]
                 logging.info("Thread part posted.")
                 time.sleep(random.randint(8, 15))
         else:
