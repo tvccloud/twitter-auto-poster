@@ -8,7 +8,7 @@ import feedparser
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 
-# Load credentials
+# Load Twitter credentials
 API_KEY = os.getenv("TWITTER_API_KEY")
 API_SECRET = os.getenv("TWITTER_API_SECRET")
 ACCESS_TOKEN = os.getenv("TWITTER_ACCESS_TOKEN")
@@ -18,7 +18,6 @@ if not all([API_KEY, API_SECRET, ACCESS_TOKEN, ACCESS_SECRET]):
     logging.error("Missing Twitter credentials. Exiting.")
     sys.exit(1)
 
-# Twitter client
 client = tweepy.Client(
     consumer_key=API_KEY,
     consumer_secret=API_SECRET,
@@ -27,75 +26,71 @@ client = tweepy.Client(
     wait_on_rate_limit=True
 )
 
-BLOCKED = {
-    "politics","election","government","minister",
-    "bjp","congress","parliament","president",
-    "religion","god","hindu","islam","christian",
-    "temple","mosque","church","israel","palestine"
-}
-
-def is_safe(text):
-    return not any(word in text.lower() for word in BLOCKED)
-
-def get_trending_topics(limit=5):
-    feed = feedparser.parse("https://news.google.com/rss?hl=en-IN&gl=IN&ceid=IN:en")
+# Get crypto news only
+def get_crypto_news(limit=10):
+    feed = feedparser.parse(
+        "https://news.google.com/rss/search?q=Bitcoin OR cryptocurrency OR crypto OR Ethereum&hl=en-IN&gl=IN&ceid=IN:en"
+    )
     topics = []
     for entry in feed.entries:
         title = entry.get("title", "")
-        if title and is_safe(title):
+        if title:
             topics.append(title)
+
         if len(topics) >= limit:
             break
+
     return topics
 
-TEMPLATES = [
-    "{topic}. This is gaining attention today.",
-    "A lot of people are discussing: {topic}",
-    "Trending now: {topic}",
-    "Seeing increased buzz around {topic}.",
-    "{topic} is getting a lot of attention recently."
-]
 
-def generate_tweet(topic):
-    return random.choice(TEMPLATES).format(topic=topic)[:270]
+def generate_crypto_tweet(topic):
+    templates = [
+        "🚀 {topic} — Crypto Twitter is buzzing.",
+        "📈 {topic}. What’s your take?",
+        "🔥 Trending in crypto: {topic}",
+        "👀 Big update: {topic}",
+        "⚡ Crypto alert: {topic}"
+    ]
+    return random.choice(templates).format(topic=topic)[:270]
 
-def generate_thread(topic):
-    # Simple deterministic multi-tweet thread
+
+def generate_crypto_thread(topic):
     return [
         f"1/ {topic}",
-        "2/ Here’s a quick breakdown of why this is trending.",
-        "3/ It’s gaining attention due to recent developments and growing public interest.",
-        "4/ More updates expected soon. Stay tuned."
+        "2/ Here’s why this matters in the crypto space.",
+        "3/ Traders and long-term holders are watching closely.",
+        "4/ The next 24 hours could be interesting.",
+        "5/ Follow for daily Bitcoin & crypto updates."
     ]
 
+
 def main():
-    topics = get_trending_topics(10)
+    topics = get_crypto_news(10)
+
     if not topics:
-        logging.info("No safe topics found.")
+        logging.info("No crypto topics found.")
         return
 
-    # pick 5 topics
     selected = topics[:5]
 
-    # find the topic with the longest text
+    # Longest topic becomes thread
     long_topic = max(selected, key=len)
 
     for topic in selected:
         if topic == long_topic:
-            # Create and post the thread
-            thread_tweets = generate_thread(topic)
+            thread = generate_crypto_thread(topic)
             reply_to = None
-            for t in thread_tweets:
-                resp = client.create_tweet(text=t, reply_to_tweet_id=reply_to)
-                reply_to = resp["data"]["id"]
-                logging.info("Thread segment posted.")
+            for tweet in thread:
+                response = client.create_tweet(text=tweet, reply_to_tweet_id=reply_to)
+                reply_to = response["data"]["id"]
+                logging.info("Thread part posted.")
                 time.sleep(random.randint(8, 15))
         else:
-            # Normal tweet
-            tweet = generate_tweet(topic)
+            tweet = generate_crypto_tweet(topic)
             client.create_tweet(text=tweet)
-            logging.info("Single tweet posted.")
+            logging.info("Tweet posted.")
             time.sleep(random.randint(10, 20))
+
 
 if __name__ == "__main__":
     main()
