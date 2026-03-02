@@ -61,8 +61,10 @@ def generate_crypto_tweet(topic):
 
 
 def generate_crypto_thread(topic):
+    unique_tag = f" #{int(time.time()) % 10000}"
+
     return [
-        f"1/ {topic}",
+        f"1/ {topic}{unique_tag}",
         "2/ Here’s why this matters in the crypto space.",
         "3/ Traders and long-term holders are watching closely.",
         "4/ The next 24 hours could be interesting.",
