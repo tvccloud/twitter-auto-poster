@@ -45,11 +45,28 @@ def get_crypto_news(limit=10):
 
 def generate_crypto_tweet(topic):
     templates = [
-        "🚀 {topic} — Crypto Twitter is buzzing.",
-        "📈 {topic}. What’s your take?",
-        "🔥 Trending in crypto: {topic}",
-        "👀 Big update: {topic}",
-        "⚡ Crypto alert: {topic}"
+        "🚀 {topic}",
+        "📈 {topic}",
+        "🔥 {topic}",
+        "⚡ {topic}",
+        "👀 {topic}"
+    ]
+
+    hashtags = ["#Bitcoin", "#BTC", "#Crypto", "#Ethereum", "#Blockchain"]
+
+    commentary = [
+        "Market watching closely.",
+        "Big conversations happening.",
+        "Volatility incoming?",
+        "Traders paying attention.",
+        "Momentum building."
+    ]
+
+    tweet = random.choice(templates).format(topic=topic)
+    tweet += " " + random.choice(commentary)
+    tweet += " " + random.choice(hashtags)
+
+    return tweet[:270]
     ]
 
     base = random.choice(templates).format(topic=topic)
@@ -61,14 +78,14 @@ def generate_crypto_tweet(topic):
 
 
 def generate_crypto_thread(topic):
-    unique_tag = f" #{int(time.time()) % 10000}"
+    hashtags = ["#Bitcoin", "#BTC", "#Crypto"]
 
     return [
-        f"1/ {topic}{unique_tag}",
-        "2/ Here’s why this matters in the crypto space.",
-        "3/ Traders and long-term holders are watching closely.",
-        "4/ The next 24 hours could be interesting.",
-        "5/ Follow for daily Bitcoin & crypto updates."
+        f"1/ {topic}",
+        "2/ Here’s what’s happening in the market.",
+        "3/ Traders and long-term holders are reacting.",
+        "4/ Watch volatility in the next 24 hours.",
+        f"5/ Stay updated daily. {random.choice(hashtags)}"
     ]
 
 
