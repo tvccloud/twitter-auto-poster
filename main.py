@@ -51,7 +51,13 @@ def generate_crypto_tweet(topic):
         "👀 Big update: {topic}",
         "⚡ Crypto alert: {topic}"
     ]
-    return random.choice(templates).format(topic=topic)[:270]
+
+    base = random.choice(templates).format(topic=topic)
+
+    # Add small uniqueness to avoid duplicate error
+    unique_tag = f" #{int(time.time()) % 10000}"
+
+    return (base + unique_tag)[:270]
 
 
 def generate_crypto_thread(topic):
